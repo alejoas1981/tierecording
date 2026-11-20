@@ -1,27 +1,27 @@
 /**
- * Manus Debug Collector (agent-friendly)
+ * AlekseySavchenko Debug Collector (agent-friendly)
  *
  * Captures:
  * 1) Console logs
  * 2) Network requests (fetch + XHR)
  * 3) User interactions (semantic uiEvents: click/type/submit/nav/scroll/etc.)
  *
- * Data is periodically sent to /__manus__/logs
+ * Data is periodically sent to /__alekseysavchenko__/logs
  * Note: uiEvents are mirrored to sessionEvents for sessionReplay.log
  */
 (function () {
   "use strict";
 
   // Prevent double initialization
-  if (window.__MANUS_DEBUG_COLLECTOR__) return;
+  if (window.__ALEKSEY_SAVCHENKO_DEBUG_COLLECTOR__) return;
 
   // The external Preview Runtime may arrive after application startup. Keep
   // errors separate from the normal log queue until its ErrorCatcher takes over.
   try {
-    window.__MANUS_RUNTIME_EARLY_ERRORS__ = [];
-    var runtime = window.ManusWebEditRuntime;
+    window.__ALEKSEY_SAVCHENKO_RUNTIME_EARLY_ERRORS__ = [];
+    var runtime = window.AlekseySavchenkoWebEditRuntime;
     if (runtime && typeof runtime.getState === "function" && runtime.getState().mounted) {
-      delete window.__MANUS_RUNTIME_EARLY_ERRORS__;
+      delete window.__ALEKSEY_SAVCHENKO_RUNTIME_EARLY_ERRORS__;
     }
   } catch {
     // An unavailable Runtime must not prevent the existing collector from loading.
@@ -29,7 +29,7 @@
 
   function captureEarlyError(from, message, callStack, timestamp) {
     try {
-      var errors = window.__MANUS_RUNTIME_EARLY_ERRORS__;
+      var errors = window.__ALEKSEY_SAVCHENKO_RUNTIME_EARLY_ERRORS__;
       // Runtime deletes this handoff after installing its own listeners.
       if (!Array.isArray(errors) || errors.length >= 50) return;
       errors.push({
@@ -46,7 +46,7 @@
 
   function captureEarlyConsoleError(args, timestamp, fallbackStack) {
     try {
-      var errors = window.__MANUS_RUNTIME_EARLY_ERRORS__;
+      var errors = window.__ALEKSEY_SAVCHENKO_RUNTIME_EARLY_ERRORS__;
       if (!Array.isArray(errors) || errors.length >= 50) return;
       var message = "";
       var callStack = "";
@@ -86,7 +86,7 @@
   // Configuration
   // ==========================================================================
   const CONFIG = {
-    reportEndpoint: "/__manus__/logs",
+    reportEndpoint: "/__alekseysavchenko__/logs",
     bufferSize: {
       console: 500,
       network: 200,
@@ -200,7 +200,7 @@
   function shouldIgnoreTarget(target) {
     try {
       if (!target || !(target instanceof Element)) return false;
-      return !!target.closest(".manus-no-record");
+      return !!target.closest(".alekseysavchenko-no-record");
     } catch (e) {
       return false;
     }
@@ -540,7 +540,7 @@
     var method = init.method || (input && input.method) || "GET";
 
     // Don't intercept internal requests
-    if (url.indexOf("/__manus__/") === 0) {
+    if (url.indexOf("/__alekseysavchenko__/") === 0) {
       return originalFetch(input, init);
     }
 
@@ -676,7 +676,7 @@
   var originalXHRSend = XMLHttpRequest.prototype.send;
 
   XMLHttpRequest.prototype.open = function (method, url) {
-    this._manusData = {
+    this._alekseysavchenkoData = {
       method: (method || "GET").toUpperCase(),
       url: url,
       startTime: null,
@@ -688,12 +688,12 @@
     var xhr = this;
 
     if (
-      xhr._manusData &&
-      xhr._manusData.url &&
-      xhr._manusData.url.indexOf("/__manus__/") !== 0
+      xhr._alekseysavchenkoData &&
+      xhr._alekseysavchenkoData.url &&
+      xhr._alekseysavchenkoData.url.indexOf("/__alekseysavchenko__/") !== 0
     ) {
-      xhr._manusData.startTime = Date.now();
-      xhr._manusData.requestBody = body ? sanitizeValue(tryParseJson(body)) : null;
+      xhr._alekseysavchenkoData.startTime = Date.now();
+      xhr._alekseysavchenkoData.requestBody = body ? sanitizeValue(tryParseJson(body)) : null;
 
       xhr.addEventListener("load", function () {
         var contentType = (xhr.getResponseHeader("content-type") || "").toLowerCase();
@@ -732,17 +732,17 @@
         }
 
         var entry = {
-          timestamp: xhr._manusData.startTime,
+          timestamp: xhr._alekseysavchenkoData.startTime,
           type: "xhr",
-          method: xhr._manusData.method,
-          url: xhr._manusData.url,
-          request: { body: xhr._manusData.requestBody },
+          method: xhr._alekseysavchenkoData.method,
+          url: xhr._alekseysavchenkoData.url,
+          request: { body: xhr._alekseysavchenkoData.requestBody },
           response: {
             status: xhr.status,
             statusText: xhr.statusText,
             body: responseBody,
           },
-          duration: Date.now() - xhr._manusData.startTime,
+          duration: Date.now() - xhr._alekseysavchenkoData.startTime,
           error: null,
         };
 
@@ -762,13 +762,13 @@
 
       xhr.addEventListener("error", function () {
         var entry = {
-          timestamp: xhr._manusData.startTime,
+          timestamp: xhr._alekseysavchenkoData.startTime,
           type: "xhr",
-          method: xhr._manusData.method,
-          url: xhr._manusData.url,
-          request: { body: xhr._manusData.requestBody },
+          method: xhr._alekseysavchenkoData.method,
+          url: xhr._alekseysavchenkoData.url,
+          request: { body: xhr._alekseysavchenkoData.requestBody },
           response: null,
-          duration: Date.now() - xhr._manusData.startTime,
+          duration: Date.now() - xhr._alekseysavchenkoData.startTime,
           error: { message: "Network error" },
         };
 
@@ -885,15 +885,15 @@
   try {
     installUiEventListeners();
   } catch (e) {
-    console.warn("[Manus] Failed to install UI listeners:", e);
+    console.warn("[AlekseySavchenko] Failed to install UI listeners:", e);
   }
 
   // Mark as initialized
-  window.__MANUS_DEBUG_COLLECTOR__ = {
+  window.__ALEKSEY_SAVCHENKO_DEBUG_COLLECTOR__ = {
     version: "2.0-no-rrweb",
     store: store,
     forceReport: reportLogs,
   };
 
-  console.debug("[Manus] Debug collector initialized (no rrweb, UI events only)");
+  console.debug("[AlekseySavchenko] Debug collector initialized (no rrweb, UI events only)");
 })();

@@ -7,12 +7,12 @@ import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { publicPlatformScript } from "./server/_core/publicConfig";
 
 // =============================================================================
-// Manus Debug Collector - Vite Plugin
+// AlekseySavchenko Debug Collector - Vite Plugin
 // Writes browser logs directly to files, trimmed when exceeding size limit
 // =============================================================================
 
 const PROJECT_ROOT = import.meta.dirname;
-const LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
+const LOG_DIR = path.join(PROJECT_ROOT, ".alekseysavchenko-logs");
 const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024; // 1MB per log file
 const TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6); // Trim to 60% to avoid constant re-trimming
 
@@ -70,13 +70,13 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
 
 /**
  * Vite plugin to collect browser debug logs
- * - POST /__manus__/logs: Browser sends logs, written directly to files
+ * - POST /__alekseysavchenko__/logs: Browser sends logs, written directly to files
  * - Files: browserConsole.log, networkRequests.log, sessionReplay.log
  * - Auto-trimmed when exceeding 1MB (keeps newest entries)
  */
-function vitePluginManusDebugCollector(): Plugin {
+function vitePluginAlekseySavchenkoDebugCollector(): Plugin {
   return {
-    name: "manus-debug-collector",
+    name: "alekseysavchenko-debug-collector",
 
     transformIndexHtml(html) {
       if (process.env.NODE_ENV === "production") {
@@ -88,7 +88,7 @@ function vitePluginManusDebugCollector(): Plugin {
           {
             tag: "script",
             attrs: {
-              src: "/__manus__/debug-collector.js",
+              src: "/__alekseysavchenko__/debug-collector.js",
             },
             injectTo: "head",
           },
@@ -97,8 +97,8 @@ function vitePluginManusDebugCollector(): Plugin {
     },
 
     configureServer(server: ViteDevServer) {
-      // POST /__manus__/logs: Browser sends logs (written directly to files)
-      server.middlewares.use("/__manus__/logs", (req, res, next) => {
+      // POST /__alekseysavchenko__/logs: Browser sends logs (written directly to files)
+      server.middlewares.use("/__alekseysavchenko__/logs", (req, res, next) => {
         if (req.method !== "POST") {
           return next();
         }
@@ -154,7 +154,7 @@ function vitePluginManusDebugCollector(): Plugin {
 // serving this path dynamically when the application server is selected.
 function vitePluginPublicPlatformConfig(): Plugin {
   return {
-    name: "manus-public-platform-config",
+    name: "alekseysavchenko-public-platform-config",
     configureServer(server) {
       server.middlewares.use("/api/platform/config.js", (_req, res) => {
         res.setHeader("Content-Type", "application/javascript");
@@ -168,7 +168,7 @@ function vitePluginPublicPlatformConfig(): Plugin {
   };
 }
 
-const plugins = [vitePluginPublicPlatformConfig(), react(), tailwindcss(), jsxLocPlugin(), vitePluginManusDebugCollector()];
+const plugins = [vitePluginPublicPlatformConfig(), react(), tailwindcss(), jsxLocPlugin(), vitePluginAlekseySavchenkoDebugCollector()];
 
 export default defineConfig({
   plugins,
@@ -189,11 +189,6 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: [
-      ".manuspre.computer",
-      ".manus.computer",
-      ".manus-asia.computer",
-      ".manuscomputer.ai",
-      ".manusvm.computer",
       "localhost",
       "127.0.0.1",
     ],
@@ -201,7 +196,7 @@ export default defineConfig({
       strict: true,
       // Setting deny replaces Vite's defaults, so they are repeated here first. Then dotfiles, and the
       // browser debug logs: they can hold request data of the people testing the Preview.
-      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "**/.*", "**/.manus-logs/**"],
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "**/.*", "**/.alekseysavchenko-logs/**"],
     },
   },
 });

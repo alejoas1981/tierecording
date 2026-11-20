@@ -3,5 +3,5 @@ dist
 .git
 .env
 .env.*
-.manus-logs
-*.manus-starter-*
+.alekseysavchenko-logs
+*.alekseysavchenko-starter-*
