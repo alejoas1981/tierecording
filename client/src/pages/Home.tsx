@@ -113,6 +113,6 @@ export default function Home() {
       </section>
       <section className="disclaimer"><div><span className="section-kicker">ЧЕСТНО О ГРАНИЦАХ</span><h2>Помощник, а не ведомство.</h2></div><p>Это независимый информационный прототип. Он не связан с государственными органами Испании, не заменяет юриста и не гарантирует получение записи или карты. Он не определяет последствия пропущенного срока. Если сомневаетесь, свяжитесь с ведомством или квалифицированным специалистом.</p></section>
     </main>
-    <footer><div className="footer-inner"><div className="footer-brand"><img src="/logo.svg" alt=""/><span><b>TIE</b> спокойно<small>Независимый помощник на русском</small></span></div><p>Информация проверена 18 ноября 2026 года.<br/>Официальные требования могут измениться.</p><a href="https://github.com/alejoas1981" target="_blank" rel="noreferrer">Aleksey Savchenko · GitHub <ArrowUpRight size={15}/></a><button onClick={() => jump('sources')}>Все источники <ArrowUpRight size={15}/></button></div></footer>
+    <footer><div className="footer-inner"><div className="footer-brand"><img src="/logo.svg" alt=""/><span><b>TIE</b> спокойно<small>Независимый помощник на русском</small></span></div><p>Информация проверена 18 ноября 2026 года.<br/>Официальные требования могут измениться.</p><a href="https://github.com/alejoas1981" target="_blank" rel="noreferrer">Разработчик: Aleksey Savchenko · GitHub <ArrowUpRight size={15}/></a><button onClick={() => jump('sources')}>Все источники <ArrowUpRight size={15}/></button></div></footer>
   </div>;
 }
