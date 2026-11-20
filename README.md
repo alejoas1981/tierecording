@@ -26,3 +26,5 @@ This is an independent informational prototype, not an official Spanish governme
 ## Analytics configuration
 
 Set `VITE_GA_MEASUREMENT_ID` to the Google Analytics measurement ID before building the application. Vite embeds this public identifier during the build. Leave it empty to disable analytics. For Docker builds, pass it as the `VITE_GA_MEASUREMENT_ID` build argument. Rebuild and redeploy after changing the value.
+
+The application sends `button_click` with a fixed `button_id` for navigation and action buttons, and `scroll_depth` with `percent_scrolled` at 25, 50, 75, and 90 percent, once per page load. Existing action events remain available separately. Register these parameters as event-scoped custom dimensions in Google Analytics to use them in standard reports. These events do not include entered text or stored journal entries.

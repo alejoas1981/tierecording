@@ -1,4 +1,6 @@
 type AnalyticsEvent =
+  | 'button_click'
+  | 'scroll_depth'
   | 'section_view'
   | 'checklist_item_completed'
   | 'checklist_completed'
@@ -38,6 +40,7 @@ export function initializeAnalytics(): void {
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
   document.head.appendChild(script);
+  trackScrollDepth();
 }
 
 export function trackEvent(name: AnalyticsEvent, parameters?: AnalyticsParameters): void {
@@ -46,4 +49,28 @@ export function trackEvent(name: AnalyticsEvent, parameters?: AnalyticsParameter
   } catch {
     // Analytics must not interrupt the user's action.
   }
+}
+
+function trackScrollDepth(): void {
+  const thresholds = [25, 50, 75, 90],
+    reached = new Set<number>();
+
+  window.addEventListener('scroll', () => {
+    const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (scrollableHeight <= 0) return;
+
+    const depth = Math.min(100, Math.max(0, (window.scrollY / scrollableHeight) * 100));
+    for (const threshold of thresholds) {
+      if (depth >= threshold && !reached.has(threshold)) {
+        reached.add(threshold);
+        trackEvent('scroll_depth', { percent_scrolled: String(threshold) });
+      }
+    }
+  }, { passive: true });
+}
+
+export function trackButtonClick(target: EventTarget | null): void {
+  if (!(target instanceof Element)) return;
+  const button = target.closest<HTMLButtonElement>('button[data-analytics-button]');
+  if (button?.dataset.analyticsButton) trackEvent('button_click', { button_id: button.dataset.analyticsButton });
 }
