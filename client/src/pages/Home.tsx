@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, CheckCircle2, ChevronRight, CircleHelp, Clipboard, Clock3, FileText, Fingerprint, Globe2, Info, LockKeyhole, Printer, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
 import { checklist, links, spanishTemplate } from '../tie-data';
+import { trackEvent } from '../lib/analytics';
 
 type Tab = 'route' | 'norecord' | 'documents' | 'sources';
 type Attempt = { id: string; at: string };
@@ -9,7 +10,8 @@ function readLocal<T>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; } catch { return fallback; }
 }
 function ExtLink({ href, children, className = '' }: { href: string; children: React.ReactNode; className?: string }) {
-  return <a className={className} href={href} target="_blank" rel="noreferrer">{children}<ArrowUpRight size={15} aria-hidden="true" /></a>;
+  const linkId = Object.entries(links).find(([, url]) => url === href)?.[0];
+  return <a className={className} href={href} target="_blank" rel="noreferrer" onClick={() => { if (linkId) trackEvent('official_link_clicked', { link_id: linkId }); }}>{children}<ArrowUpRight size={15} aria-hidden="true" /></a>;
 }
 
 export default function Home() {
@@ -23,12 +25,18 @@ export default function Home() {
     try { localStorage.setItem(KEYS.checks, JSON.stringify(checked)); localStorage.setItem(KEYS.attempts, JSON.stringify(attempts)); setStorageUnavailable(false); }
     catch { setStorageUnavailable(true); }
   }, [checked, attempts]);
-  const changeTab = (next: Tab) => { setTab(next); setTimeout(() => document.getElementById(`tab-${next}`)?.focus(), 0); };
+  const changeTab = (next: Tab) => { if (next !== tab) trackEvent('section_view', { section: next }); setTab(next); setTimeout(() => document.getElementById(`tab-${next}`)?.focus(), 0); };
   const jump = (next: Tab) => { changeTab(next); setTimeout(() => document.getElementById('guide')?.scrollIntoView({behavior:'smooth',block:'start'}), 30); };
-  const toggle = (id: string) => setChecked(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  const addAttempt = () => setAttempts(prev => [{id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, at: new Date().toISOString()}, ...prev]);
+  const toggle = (id: string) => {
+    if (!checked.includes(id)) {
+      trackEvent('checklist_item_completed', { item_id: id });
+      if (checklist.every(item => item.id === id || checked.includes(item.id))) trackEvent('checklist_completed');
+    }
+    setChecked(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+  const addAttempt = () => { trackEvent('appointment_check_logged'); setAttempts(prev => [{id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, at: new Date().toISOString()}, ...prev]); };
   const copy = async () => {
-    try { await navigator.clipboard.writeText(spanishTemplate); setCopied(true); setCopyError(false); window.setTimeout(() => setCopied(false), 3000); }
+    try { await navigator.clipboard.writeText(spanishTemplate); trackEvent('spanish_template_copied'); setCopied(true); setCopyError(false); window.setTimeout(() => setCopied(false), 3000); }
     catch { setCopyError(true); }
   };
   const formatted = (value: string) => new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'}).format(new Date(value));
@@ -99,7 +107,7 @@ export default function Home() {
               <div className="panel-label">ПЕРЕД ПРИЁМОМ <span>{checked.length} / {checklist.length}</span></div><h3>Чек-лист подготовки.</h3><p className="panel-intro">Это ориентир, а не полный перечень для всех. До визита обязательно уточните требования своего отделения и тип вашей процедуры.</p>
               <div className="progress-track" aria-label={`Отмечено ${checked.length} из ${checklist.length}`}><span style={{width:`${checked.length/checklist.length*100}%`}}/></div>
               <div className="checks">{checklist.map(item => <div className={`check-row ${checked.includes(item.id)?'done':''}`} key={item.id}><label><input type="checkbox" checked={checked.includes(item.id)} onChange={() => toggle(item.id)}/><span className="check-box"><Check size={13}/></span><span><b>{item.title}</b><small>{item.description}</small></span></label>{item.link && <ExtLink className="check-link" href={item.link}>{item.linkText}</ExtLink>}</div>)}</div>
-              <div className="check-actions"><button className="clear-link" onClick={() => setChecked([])}><RotateCcw size={15}/> Сбросить отметки</button><button className="clear-link" onClick={() => window.print()}><Printer size={15}/> Распечатать страницу</button></div>
+              <div className="check-actions"><button className="clear-link" onClick={() => setChecked([])}><RotateCcw size={15}/> Сбросить отметки</button><button className="clear-link" onClick={() => { trackEvent('checklist_printed'); window.print(); }}><Printer size={15}/> Распечатать страницу</button></div>
               <div className="soft-callout"><Info size={20}/><p>Не выбирайте пункт пошлины только по размеру суммы или совету из чата. Проверьте категорию по своему основанию; при сомнениях обратитесь в ведомство.</p></div>
             </div>}
             {tab === 'sources' && <div className="panel" id="guide-panel" role="tabpanel" aria-labelledby="tab-sources" tabIndex={0}><div className="panel-label">ОСНОВА ПОМОЩНИКА <span>18.11.2026</span></div><h3>Официальные источники.</h3><p className="panel-intro">Информация могла измениться после проверки. Перед действием сверяйтесь с первоисточником и своим отделением.</p>

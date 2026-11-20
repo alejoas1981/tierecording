@@ -22,3 +22,7 @@ The project uses pnpm 10.18.0 and Node.js 22 as specified in the Dockerfile.
 Aleksey Savchenko, https://github.com/alejoas1981.
 
 This is an independent informational prototype, not an official Spanish government service or legal advice. Check current requirements with the relevant authorities.
+
+## Analytics configuration
+
+Set `VITE_GA_MEASUREMENT_ID` to the Google Analytics measurement ID before building the application. Vite embeds this public identifier during the build. Leave it empty to disable analytics. For Docker builds, pass it as the `VITE_GA_MEASUREMENT_ID` build argument. Rebuild and redeploy after changing the value.
